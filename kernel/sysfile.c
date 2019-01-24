@@ -9,6 +9,8 @@
 #include "fcntl.h"
 #include "sysfunc.h"
 
+static int g_readcount = 0;
+
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
 static int
@@ -61,6 +63,8 @@ sys_dup(void)
 int
 sys_read(void)
 {
+  g_readcount++;
+  
   struct file *f;
   int n;
   char *p;
@@ -389,4 +393,10 @@ sys_pipe(void)
   fd[0] = fd0;
   fd[1] = fd1;
   return 0;
+}
+
+int
+sys_getreadcount(void)
+{
+  return g_readcount;
 }
