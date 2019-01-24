@@ -1,0 +1,6 @@
+.directory
+
+# Make/Compile Output Files
+*.o
+*.out
+fs/
