@@ -23,6 +23,6 @@ int sys_unlink(void);
 int sys_wait(void);
 int sys_write(void);
 int sys_uptime(void);
-int sys_getreadcount(void);
+int sys_callcount(void);
 
 #endif // _SYSFUNC_H_

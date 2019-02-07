@@ -17,7 +17,7 @@ USER_PROGS := \
 	usertests\
 	wc\
 	zombie\
-	readcount
+	callcount
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
