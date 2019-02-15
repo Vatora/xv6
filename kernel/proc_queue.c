@@ -5,16 +5,75 @@
 #include "proc.h"
 #include "defs.h"
 
-void bin_heap_init(binary_heap* heap);
-void bin_heap_heapify(binary_heap* heap);
-void bin_heap_insert(binary_heap* heap, void* data, int value);
-void bin_heap_remove_first(binary_heap* heap, void* data);
-void bin_heap_bubble_down(binary_heap* heap, int idx);
-void bin_heap_bubble_up(binary_heap* heap, int idx);
-void bin_heap_delete_min();
+void  bin_heap_init(binary_heap* heap);
+void  bin_heap_heapify(binary_heap* heap);
+void  bin_heap_insert(binary_heap* heap, void* data, int value);
+void  bin_heap_remove_first(binary_heap* heap, void* data);
+void  bin_heap_bubble_down(binary_heap* heap, int idx);
+void  bin_heap_bubble_up(binary_heap* heap, int idx);
+void  bin_heap_delete_min();
 void* bin_heap_get_min();
 
-int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
+static const int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
+
+
+//----------------------------------------------------------------------------------
+// Process Queue
+//----------------------------------------------------------------------------------
+
+void proc_queue_init(proc_queue* queue) {
+	cprintf("init proc queue\n");
+	bin_heap_init(&queue->heap);
+}
+
+
+void proc_queue_rebuild(proc_queue* queue) {
+	bin_heap_heapify(&queue->heap);
+}
+
+struct proc* proc_queue_get_min(proc_queue* queue) {
+	return (struct proc*)bin_heap_get_min(&queue->heap);
+}
+
+void proc_queue_remove(proc_queue* queue, struct proc* p) {
+	if (p) {
+		//cprintf("rm {v:%d, p:%p}\n", p->schdldat.pass, p);
+		bin_heap_remove_first_of(&queue->heap, p);
+	}
+}
+
+void proc_queue_insert(proc_queue* queue, struct proc* p) {
+	if (p) {
+		//cprintf("push {v:%d, d:%p}\n", p->schdldat.pass, p);
+		bin_heap_insert(&queue->heap, p, p->schdldat.pass);
+	}
+}
+
+struct proc* proc_queue_pop_min(proc_queue* queue) {
+	struct proc* p = bin_heap_get_min(&queue->heap);
+	if (!p) {
+		return NULL;
+	}
+	//cprintf("pop {v:%d, p:%p}\n", p->schdldat.pass, p);
+	bin_heap_delete_min(&queue->heap);
+	return p;
+}
+
+void proc_queue_print(proc_queue* queue) {
+	cprintf("|| size: %d |", queue->heap.size);
+	for (int i = 0; i < queue->heap.size; i++) {
+		bin_heap_node* node = &queue->heap.nodes[i];
+		cprintf("| %s (%d) ", ((struct proc*)node->data)->name, node->value);
+	}
+	cprintf("||\n");
+}
+
+
+
+
+//----------------------------------------------------------------------------------
+// Binary Heap
+//----------------------------------------------------------------------------------
 
 void bin_heap_init(binary_heap* heap) {
 	heap->size = 0;
@@ -117,58 +176,4 @@ void bin_heap_delete_min(binary_heap* heap) {
 
 void* bin_heap_get_min(binary_heap* heap) {
 	return heap->size == 0 ? NULL : heap->nodes[0].data;
-}
-
-
-
-
-
-void proc_queue_init(proc_queue* queue) {
-	cprintf("init proc queue\n");
-	bin_heap_init(&queue->heap);
-}
-
-
-void proc_queue_rebuild(proc_queue* queue) {
-	bin_heap_heapify(&queue->heap);
-}
-
-void proc_queue_remove(proc_queue* queue, struct proc* p) {
-	if (p) {
-		//cprintf("rm {v:%d, p:%p}\n", p->schdldat.pass, p);
-		bin_heap_remove_first_of(&queue->heap, p);
-		//cprintf("--size: %d\n", queue->heap.size);
-	}
-}
-
-void proc_queue_insert(proc_queue* queue, struct proc* p) {
-	if (p) {
-		//cprintf("push {v:%d, d:%p}\n", p->schdldat.pass, p);
-		bin_heap_insert(&queue->heap, p, p->schdldat.pass);
-		//cprintf("--size: %d\n", queue->heap.size);
-	}
-}
-
-struct proc* proc_queue_get_min(proc_queue* queue) {
-	return (struct proc*)bin_heap_get_min(&queue->heap);
-}
-
-struct proc* proc_queue_pop_min(proc_queue* queue) {
-	struct proc* p = bin_heap_get_min(&queue->heap);
-	if (!p) {
-		return NULL;
-	}
-	//cprintf("pop {v:%d, p:%p}\n", p->schdldat.pass, p);
-	bin_heap_delete_min(&queue->heap);
-	//cprintf("--size: %d\n", queue->heap.size);
-	return p;
-}
-
-void proc_queue_print(proc_queue* queue) {
-	cprintf("|| size: %d |", queue->heap.size);
-	for (int i = 0; i < queue->heap.size; i++) {
-		bin_heap_node* node = &queue->heap.nodes[i];
-		cprintf("| %s (%d) ", ((struct proc*)node->data)->name, node->value);
-	}
-	cprintf("||\n");
 }
