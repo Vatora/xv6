@@ -8,7 +8,6 @@
 void  bin_heap_init(binary_heap* heap);
 void  bin_heap_heapify(binary_heap* heap);
 void  bin_heap_insert(binary_heap* heap, void* data, int value);
-void  bin_heap_remove_first(binary_heap* heap, void* data);
 void  bin_heap_bubble_down(binary_heap* heap, int idx);
 void  bin_heap_bubble_up(binary_heap* heap, int idx);
 void  bin_heap_delete_min();
@@ -33,13 +32,6 @@ void proc_queue_rebuild(proc_queue* queue) {
 
 struct proc* proc_queue_get_min(proc_queue* queue) {
 	return (struct proc*)bin_heap_get_min(&queue->heap);
-}
-
-void proc_queue_remove(proc_queue* queue, struct proc* p) {
-	if (p) {
-		//cprintf("rm {v:%d, p:%p}\n", p->schdldat.pass, p);
-		bin_heap_remove_first_of(&queue->heap, p);
-	}
 }
 
 void proc_queue_insert(proc_queue* queue, struct proc* p) {
