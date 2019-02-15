@@ -22,9 +22,6 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
-#define STRIDE_DIV (1 << 16)
-#define DEFAULT_TICKETS 10
-
 void
 pinit(void)
 {

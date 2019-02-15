@@ -390,3 +390,32 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+int
+sys_setticket(void){
+  int tickets;
+  argint(0, &tickets);
+  
+  if (tickets >= 10 && tickets <=200) {
+    if(tickets % 10 == 0){
+        proc->schdldat.tickets = tickets;  // Update the process tickets
+        proc->schdldat.stride = STRIDE_DIV / tickets; // Recalculate stride
+        return 0;
+    }
+    else
+      cprintf("Ticket value should be multiples of 10\n");
+  }
+  else
+    cprintf("Ticket value should be between 10 and 200 inclusive\n");
+  return -1;
+}
+
+int
+sys_getticket(void){
+  return proc->schdldat.tickets;
+}
+
+int
+sys_getpinfo(void){
+  return 0;
+}
