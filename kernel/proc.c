@@ -159,9 +159,11 @@ fork(void)
   np->parent = proc;
   *np->tf = *proc->tf;
 
-  // Copy the stride from the parent
+  // Copy the scheduling data from the parent
   np->schdldat.tickets = proc->schdldat.tickets;
   np->schdldat.stride = proc->schdldat.stride;
+  np->schdldat.pass = proc->schdldat.pass;
+
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -304,26 +306,6 @@ scheduler(void)
     switchkvm();
 
     proc = 0;
-
-    /*
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      swtch(&cpu->scheduler, proc->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      proc = 0;
-    }
-    */
     
     release(&ptable.lock);
 
