@@ -98,17 +98,14 @@ bin_heap_heapify(binary_heap* heap)
 void
 bin_heap_bubble_down(binary_heap* heap, int idx)
 {
-
-	if (!heap) {
+	if (!heap)
 		return;
-	}
 
-	int left_idx  = 2*idx + 1;
-	int right_idx = 2*idx + 2;
+	const int left_idx  = 2*idx + 1;
+	const int right_idx = 2*idx + 2;
 
-	if (left_idx >= heap->size) {
+	if (left_idx >= heap->size)
 		return;
-	}
 
 	int min_idx = idx;
 
@@ -131,11 +128,10 @@ bin_heap_bubble_down(binary_heap* heap, int idx)
 void
 bin_heap_bubble_up(binary_heap* heap, int idx)
 {
-	if (!heap || idx == 0) {
+	if (!heap || idx == 0)
 		return;
-	}
 
-	int parent_idx = (idx-1) / 2;
+	const int parent_idx = (idx-1) / 2;
 
 	if (heap->nodes[parent_idx].value > heap->nodes[idx].value) {
 		bin_heap_node temp = heap->nodes[parent_idx];
@@ -148,9 +144,8 @@ bin_heap_bubble_up(binary_heap* heap, int idx)
 void
 bin_heap_insert(binary_heap* heap, void* data, int value)
 {
-	if (!heap) {
+	if (!heap)
 		return;
-	}
 
 	heap->nodes[heap->size].value = value;
 	heap->nodes[heap->size].data = data;
@@ -161,9 +156,8 @@ bin_heap_insert(binary_heap* heap, void* data, int value)
 void
 bin_heap_delete_min(binary_heap* heap)
 {
-	if (!heap || heap->size == 0) {
+	if (!heap || heap->size == 0)
 		return;
-	}
 
 	heap->nodes[0] = heap->nodes[heap->size - 1];
 	heap->size--;
