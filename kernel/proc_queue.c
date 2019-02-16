@@ -10,8 +10,9 @@ void  bin_heap_heapify(binary_heap* heap);
 void  bin_heap_insert(binary_heap* heap, void* data, int value);
 void  bin_heap_bubble_down(binary_heap* heap, int idx);
 void  bin_heap_bubble_up(binary_heap* heap, int idx);
+const bin_heap_node* bin_heap_peek_min(const binary_heap* heap);
 void  bin_heap_delete_min();
-void* bin_heap_get_min(const binary_heap* heap);
+bin_heap_node bin_heap_pop_min(binary_heap* heap);
 
 static const int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
 
@@ -37,7 +38,8 @@ proc_queue_rebuild(proc_queue* queue)
 struct proc*
 proc_queue_get_min(const proc_queue* queue)
 {
-	return (struct proc*)bin_heap_get_min(&queue->heap);
+	const bin_heap_node* node = bin_heap_peek_min(&queue->heap);
+  return node ? node->data : NULL;
 }
 
 void
@@ -52,13 +54,8 @@ proc_queue_insert(proc_queue* queue, struct proc* p)
 struct proc*
 proc_queue_pop_min(proc_queue* queue)
 {
-	struct proc* p = bin_heap_get_min(&queue->heap);
-	if (!p) {
-		return NULL;
-	}
-	//cprintf("pop {v:%d, p:%p}\n", p->schdldat.pass, p);
-	bin_heap_delete_min(&queue->heap);
-	return p;
+	const bin_heap_node node = bin_heap_pop_min(&queue->heap);
+	return node.data; 
 }
 
 void
@@ -162,24 +159,6 @@ bin_heap_insert(binary_heap* heap, void* data, int value)
 }
 
 void
-bin_heap_remove_first_of(binary_heap* heap, void* data)
-{
-	if (!heap) {
-		return;
-	}
-
-	for (int i = 0; i < heap->size; i++) {
-		if (heap->nodes[i].data == data) {
-			heap->nodes[i].data = NULL;
-			heap->nodes[i].value = g_int_max;
-			bin_heap_bubble_down(heap, i);
-			heap->size--;
-			break;
-		}
-	}
-}
-
-void
 bin_heap_delete_min(binary_heap* heap)
 {
 	if (!heap || heap->size == 0) {
@@ -192,8 +171,25 @@ bin_heap_delete_min(binary_heap* heap)
 	bin_heap_bubble_down(heap, 0);
 }
 
-void*
-bin_heap_get_min(const binary_heap* heap)
+const bin_heap_node*
+bin_heap_peek_min(const binary_heap* heap)
 {
-	return heap->size == 0 ? NULL : heap->nodes[0].data;
+	return (heap && heap->size == 0) ? NULL : &heap->nodes[0];
+}
+
+bin_heap_node
+bin_heap_pop_min(binary_heap* heap)
+{
+  bin_heap_node out;
+  const bin_heap_node* node = bin_heap_peek_min(heap);
+  if (node) {
+    out = *node;
+    bin_heap_delete_min(heap);
+    return out;
+  }
+  else {
+    out.value = g_int_max;
+    out.data = NULL;
+    return out;
+  }
 }
