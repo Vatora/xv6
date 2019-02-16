@@ -15,7 +15,7 @@ typedef struct bin_heap_node {
 } bin_heap_node;
 
 typedef struct binary_heap {
-	bin_heap_node nodes[NPROC];
+  bin_heap_node nodes[NPROC];
 	int size;
 	int max_size;
 } binary_heap;
