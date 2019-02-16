@@ -11,7 +11,7 @@ void  bin_heap_insert(binary_heap* heap, void* data, int value);
 void  bin_heap_bubble_down(binary_heap* heap, int idx);
 void  bin_heap_bubble_up(binary_heap* heap, int idx);
 void  bin_heap_delete_min();
-void* bin_heap_get_min();
+void* bin_heap_get_min(const binary_heap* heap);
 
 static const int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
 
@@ -35,7 +35,7 @@ proc_queue_rebuild(proc_queue* queue)
 }
 
 struct proc*
-proc_queue_get_min(proc_queue* queue)
+proc_queue_get_min(const proc_queue* queue)
 {
 	return (struct proc*)bin_heap_get_min(&queue->heap);
 }
@@ -62,11 +62,11 @@ proc_queue_pop_min(proc_queue* queue)
 }
 
 void
-proc_queue_print(proc_queue* queue)
+proc_queue_print(const proc_queue* queue)
 {
 	cprintf("|| size: %d |", queue->heap.size);
 	for (int i = 0; i < queue->heap.size; i++) {
-		bin_heap_node* node = &queue->heap.nodes[i];
+		const bin_heap_node* node = &queue->heap.nodes[i];
 		cprintf("| %s (%d) ", ((struct proc*)node->data)->name, node->value);
 	}
 	cprintf("||\n");
@@ -193,7 +193,7 @@ bin_heap_delete_min(binary_heap* heap)
 }
 
 void*
-bin_heap_get_min(binary_heap* heap)
+bin_heap_get_min(const binary_heap* heap)
 {
 	return heap->size == 0 ? NULL : heap->nodes[0].data;
 }
