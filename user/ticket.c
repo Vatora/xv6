@@ -11,9 +11,13 @@ main(int argc, char *argv[])
     ticket = atoi(argv[1]);
   }
 
-  printf(1,"Process ID:%d\nOriginal Ticket Count:%d\n", getpid(), getticket());
+  printf(1, "Process ID: %d\nOriginal Ticket Count: %d\n", getpid(), getticket());
 
-  setticket(ticket);
-  printf(1, "New Ticket Count:%d\n", getticket());
+  if (setticket(ticket) < 0) {
+	  printf(2, "Error setting ticket value\n");
+	  exit();
+  }
+
+  printf(1, "New Ticket Count: %d\n", getticket());
   exit();
 }
