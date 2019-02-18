@@ -12,16 +12,16 @@ main()
 
   for (int i = 0; i < NPROC; ++i) {
     if (!stats.inuse[i]) continue;
-    printf(0, "------------------------\n");
-    printf(0, "proc %d (pid: %d)\n", i, stats.pid[i]);
-    printf(0, "------------------------\n");
-    printf(0, "Tickets:         %d\n", stats.tickets[i]);
-    printf(0, "Stride:          %d\n", stats.stride[i]);
-    printf(0, "Pass:            %d\n", stats.pass[i]);
-    printf(0, "Times scheduled: %d\n", stats.scheduled[i]);
-    printf(0, "CPU Time:        %d\n", stats.ticks[i]);
-    printf(0, "------------------------\n");
-    printf(0, "\n");
+    printf(1, "------------------------\n");
+    printf(1, "proc %d (pid: %d)\n", i, stats.pid[i]);
+    printf(1, "------------------------\n");
+    printf(1, "Tickets:         %d\n", stats.tickets[i]);
+    printf(1, "Stride:          %d\n", stats.stride[i]);
+    printf(1, "Pass:            %d\n", stats.pass[i]);
+    printf(1, "Times scheduled: %d\n", stats.scheduled[i]);
+    printf(1, "CPU Time:        %d\n", stats.ticks[i]);
+    printf(1, "------------------------\n");
+    printf(1, "\n");
   }
 
   exit();
