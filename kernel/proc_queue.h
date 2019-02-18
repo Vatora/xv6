@@ -37,7 +37,7 @@ typedef struct proc_priority_queue {
 void proc_queue_init(proc_queue* queue);
 void proc_queue_rebuild(proc_queue* queue);
 void proc_queue_insert(proc_queue* queue, struct proc* p);
-struct proc* proc_queue_get_min(const proc_queue* queue);
+struct proc* proc_queue_peek_min(const proc_queue* queue);
 struct proc* proc_queue_pop_min(proc_queue* queue);
 void proc_queue_print(const proc_queue* queue);
 

@@ -5,14 +5,14 @@
 #include "proc.h"
 #include "defs.h"
 
-void  bin_heap_init(binary_heap* heap);
-void  bin_heap_heapify(binary_heap* heap);
-void  bin_heap_insert(binary_heap* heap, void* data, int value);
-void  bin_heap_bubble_down(binary_heap* heap, int idx);
-void  bin_heap_bubble_up(binary_heap* heap, int idx);
-const bin_heap_node* bin_heap_peek_min(const binary_heap* heap);
-void  bin_heap_delete_min();
-bin_heap_node bin_heap_pop_min(binary_heap* heap);
+static void bin_heap_init(binary_heap* heap);
+static void bin_heap_heapify(binary_heap* heap);
+static void bin_heap_insert(binary_heap* heap, void* data, int value);
+static void bin_heap_bubble_down(binary_heap* heap, int idx);
+static void bin_heap_bubble_up(binary_heap* heap, int idx);
+static void bin_heap_delete_min();
+static const bin_heap_node* bin_heap_peek_min(const binary_heap* heap);
+static bin_heap_node bin_heap_pop_min(binary_heap* heap);
 
 static const int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
 
@@ -36,7 +36,7 @@ proc_queue_rebuild(proc_queue* queue)
 }
 
 struct proc*
-proc_queue_get_min(const proc_queue* queue)
+proc_queue_peek_min(const proc_queue* queue)
 {
 	const bin_heap_node* node = bin_heap_peek_min(&queue->heap);
   return node ? node->data : NULL;
@@ -76,7 +76,7 @@ proc_queue_print(const proc_queue* queue)
 // Binary Heap
 //----------------------------------------------------------------------------------
 
-void
+static void
 bin_heap_init(binary_heap* heap)
 {
 	heap->size = 0;
@@ -87,7 +87,7 @@ bin_heap_init(binary_heap* heap)
 	}
 }
 
-void
+static void
 bin_heap_heapify(binary_heap* heap)
 {
 	for (int i = heap->size - 1; i >= 0; i--) {
@@ -95,7 +95,7 @@ bin_heap_heapify(binary_heap* heap)
 	}
 }
 
-void
+static void
 bin_heap_bubble_down(binary_heap* heap, int idx)
 {
 	if (!heap)
@@ -125,7 +125,7 @@ bin_heap_bubble_down(binary_heap* heap, int idx)
 	}
 }
 
-void
+static void
 bin_heap_bubble_up(binary_heap* heap, int idx)
 {
 	if (!heap || idx == 0)
@@ -141,7 +141,7 @@ bin_heap_bubble_up(binary_heap* heap, int idx)
 	}
 }
 
-void
+static void
 bin_heap_insert(binary_heap* heap, void* data, int value)
 {
 	if (!heap)
@@ -153,7 +153,7 @@ bin_heap_insert(binary_heap* heap, void* data, int value)
 	heap->size++;
 }
 
-void
+static void
 bin_heap_delete_min(binary_heap* heap)
 {
 	if (!heap || heap->size == 0)
@@ -165,13 +165,13 @@ bin_heap_delete_min(binary_heap* heap)
 	bin_heap_bubble_down(heap, 0);
 }
 
-const bin_heap_node*
+static const bin_heap_node*
 bin_heap_peek_min(const binary_heap* heap)
 {
 	return (heap && heap->size == 0) ? NULL : &heap->nodes[0];
 }
 
-bin_heap_node
+static bin_heap_node
 bin_heap_pop_min(binary_heap* heap)
 {
   bin_heap_node out;
