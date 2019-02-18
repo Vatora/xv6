@@ -10,7 +10,7 @@
 #define SEG_TSS   6  // this process's task state
 #define NSEGS     7
 
-#define STRIDE_DIV (1 << 16)
+#define STRIDE_DIV (1 << 12)
 #define DEFAULT_TICKETS 10
 
 // Per-CPU state
