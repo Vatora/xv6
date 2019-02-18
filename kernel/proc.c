@@ -8,9 +8,7 @@
 #include "pstat.h"
 #include "proc_queue.h"
 
-
-#define MAX_CYCLES 50
-
+#define MAX_QUANTA 50
 
 struct {
   struct spinlock lock;
@@ -51,14 +49,14 @@ set_min_pass(struct proc* newproc)
 	if (!newproc || !pmin)
 	  return;
 
-  // Number of scheduler cycles for which the new process will occupy the CPU
+  // Number of scheduler quanta for which the new process will occupy the CPU
   const int pass_delta = pmin->schdldat.pass - newproc->schdldat.pass;
-  const int cycles     = pass_delta / newproc->schdldat.stride;
+  const int quanta     = pass_delta / newproc->schdldat.stride;
 
-  // Make the process take at most MAX_CYCLES scheduler cycles
+  // Make the process take at most MAX_QUANTA scheduler quanta
   // before a different process is scheduled
-	if (cycles < MAX_CYCLES)
-	  newproc->schdldat.pass = pmin->schdldat.pass - (MAX_CYCLES * newproc->schdldat.stride);
+	if (quanta < MAX_QUANTA)
+	  newproc->schdldat.pass = pmin->schdldat.pass - (MAX_QUANTA * newproc->schdldat.stride);
 }
 
 void
