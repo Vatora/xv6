@@ -392,11 +392,12 @@ sys_pipe(void)
 }
 
 int
-sys_setticket(void){
+sys_setticket(void)
+{
   int tickets;
   argint(0, &tickets);
   
-  if (tickets >= 10 && tickets <=200) {
+  if (tickets >= 10 && tickets <= 200) {
     if(tickets % 10 == 0){
         proc->schdldat.tickets = tickets;  // Update the process tickets
         proc->schdldat.stride = STRIDE_DIV / tickets; // Recalculate stride
@@ -411,11 +412,13 @@ sys_setticket(void){
 }
 
 int
-sys_getticket(void){
+sys_getticket(void)
+{
   return proc->schdldat.tickets;
 }
 
 int
-sys_getpinfo(void){
+sys_getpinfo(void)
+{
   return 0;
 }
