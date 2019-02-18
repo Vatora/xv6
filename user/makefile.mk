@@ -10,15 +10,16 @@ USER_PROGS := \
 	ln\
 	ls\
 	mkdir\
+	pinfo\
 	rm\
 	sh\
 	stressfs\
 	tester\
+	ticket\
 	usertests\
 	wc\
+	waketest\
 	zombie\
-	ticket\
-	pinfo
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
