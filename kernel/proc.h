@@ -64,9 +64,10 @@ enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Scheduling data
 struct scheduling {
-  int tickets;
-  int stride;
-  int pass;
+  int tickets;   // Number of tickets the process has
+  int stride;    // Process stride (calculated using tickets)
+  int pass;      // Current pass value of the process
+  int schdlnum;  // Number of times the process has been scheduled
 };
 
 // Per-process state

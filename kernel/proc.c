@@ -5,8 +5,12 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-
+#include "pstat.h"
 #include "proc_queue.h"
+
+
+#define MAX_CYCLES 50
+
 
 struct {
   struct spinlock lock;
@@ -21,6 +25,41 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+static void set_min_pass(struct proc* newproc);
+
+void
+getpstats(struct pstat* stats)
+{
+  acquire(&ptable.lock);
+  for (int i = 0; i < NPROC; ++i) {
+    stats->inuse[i]     = ptable.proc[i].state != UNUSED;
+    stats->pid[i]       = ptable.proc[i].pid;
+    stats->tickets[i]   = ptable.proc[i].schdldat.tickets;
+    stats->stride[i]    = ptable.proc[i].schdldat.stride;
+    stats->pass[i]      = ptable.proc[i].schdldat.pass;
+    stats->scheduled[i] = ptable.proc[i].schdldat.schdlnum;
+    stats->ticks[i]     = ptable.proc[i].schdldat.schdlnum * 10; //Assuming 10ms quantum w/ no early interrupt
+  }
+  release(&ptable.lock);
+}
+
+// Assumes ptable.lock has already been acquired
+static void
+set_min_pass(struct proc* newproc)
+{
+	struct proc* pmin = proc_queue_peek_min(&ptable.pqueue);
+	if (!newproc || !pmin)
+	  return;
+
+  // Number of scheduler cycles for which the new process will occupy the CPU
+  const int pass_delta = pmin->schdldat.pass - newproc->schdldat.pass;
+  const int cycles     = pass_delta / newproc->schdldat.stride;
+
+  // Make the process take at most MAX_CYCLES scheduler cycles
+  // before a different process is scheduled
+	if (cycles < MAX_CYCLES)
+	  newproc->schdldat.pass = pmin->schdldat.pass - (MAX_CYCLES * newproc->schdldat.stride);
+}
 
 void
 pinit(void)
@@ -51,6 +90,7 @@ found:
   p->schdldat.tickets = DEFAULT_TICKETS;
   p->schdldat.stride = STRIDE_DIV / DEFAULT_TICKETS;
   p->schdldat.pass = 0;
+  p->schdldat.schdlnum = 0;
 
   p->state = EMBRYO;
   p->pid = nextpid++;
@@ -293,9 +333,10 @@ scheduler(void)
       release(&ptable.lock);
       continue;
     }
-
     //cprintf("scheduling process: %s (0x%p)\n", p->name, p);
+
     p->schdldat.pass += p->schdldat.stride;
+    p->schdldat.schdlnum++;
     proc = p;
     switchuvm(p);
     p->state = RUNNING;
@@ -398,6 +439,7 @@ wakeup1(void *chan)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan) {
       p->state = RUNNABLE;
+      set_min_pass(p);
       proc_queue_insert(&ptable.pqueue, p);
     }
 }
