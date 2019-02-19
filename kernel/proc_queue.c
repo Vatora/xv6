@@ -24,7 +24,6 @@ static const int g_int_max = (((1 << (sizeof(int)*8 - 2)) - 1) * 2) + 1;
 void
 proc_queue_init(proc_queue* queue)
 {
-	cprintf("init proc queue\n");
 	bin_heap_init(&queue->heap);
 }
 
