@@ -18,7 +18,8 @@ USER_PROGS := \
 	wc\
 	zombie\
 	ticket\
-	pinfo
+	pinfo\
+	ticktest
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
