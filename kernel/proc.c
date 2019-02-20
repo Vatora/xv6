@@ -325,23 +325,20 @@ scheduler(void)
 
     // Run the process with the minimum pass value
     p = proc_queue_pop_min(&ptable.pqueue);
-    if (!p || p->state != RUNNABLE) {
-	    if (p)
+
+    if (p) {
+      if (p->state != RUNNABLE)
         cprintf("non-runnable process in queue: %s (0x%p) (state: %d)\n", p->name, p, p->state);
-      release(&ptable.lock);
-      continue;
+
+      p->schdldat.pass += p->schdldat.stride;
+      p->schdldat.schdlnum++;
+      proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      swtch(&cpu->scheduler, proc->context);
+      switchkvm();
+      proc = 0;
     }
-    //cprintf("scheduling process: %s (0x%p)\n", p->name, p);
-
-    p->schdldat.pass += p->schdldat.stride;
-    p->schdldat.schdlnum++;
-    proc = p;
-    switchuvm(p);
-    p->state = RUNNING;
-    swtch(&cpu->scheduler, proc->context);
-    switchkvm();
-
-    proc = 0;
     
     release(&ptable.lock);
 
