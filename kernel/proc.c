@@ -45,9 +45,9 @@ getpstats(struct pstat* stats)
 static void
 set_min_pass(struct proc* newproc)
 {
-	struct proc* pmin = proc_queue_peek_min(&ptable.pqueue);
-	if (!newproc || !pmin)
-	  return;
+  struct proc* pmin = proc_queue_peek_min(&ptable.pqueue);
+  if (!newproc || !pmin)
+    return;
 
   // Number of scheduler quanta for which the new process will occupy the CPU
   const int pass_delta = pmin->schdldat.pass - newproc->schdldat.pass;
@@ -55,8 +55,8 @@ set_min_pass(struct proc* newproc)
 
   // Make the process take at most MAX_QUANTA scheduler quanta
   // before a different process is scheduled
-	if (quanta < MAX_QUANTA)
-	  newproc->schdldat.pass = pmin->schdldat.pass - (MAX_QUANTA * newproc->schdldat.stride);
+  if (quanta < MAX_QUANTA)
+    newproc->schdldat.pass = pmin->schdldat.pass - (MAX_QUANTA * newproc->schdldat.stride);
 }
 
 void

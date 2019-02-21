@@ -10,14 +10,14 @@ struct proc;
 // Binary Heap
 //----------------------------------------------------------------------------------
 typedef struct bin_heap_node {
-	int value;
-	void* data;
+  int value;
+  void* data;
 } bin_heap_node;
 
 typedef struct binary_heap {
   bin_heap_node nodes[NPROC];
-	int size;
-	int max_size;
+  int size;
+  int max_size;
 } binary_heap;
 
 
@@ -28,10 +28,8 @@ typedef struct binary_heap {
 // A simple wrapper around the binary heap that works with the xv6 process struct.
 //
 //----------------------------------------------------------------------------------
-typedef binary_heap proc_priority_heap;
-
 typedef struct proc_priority_queue {
-	proc_priority_heap heap;
+  binary_heap heap;
 } proc_queue;
 
 void proc_queue_init(proc_queue* queue);
