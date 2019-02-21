@@ -8,7 +8,7 @@
 #include "pstat.h"
 #include "proc_queue.h"
 
-#define MAX_QUANTA 50
+#define MAX_QUANTA 10
 
 struct {
   struct spinlock lock;
@@ -55,7 +55,7 @@ set_min_pass(struct proc* newproc)
 
   // Make the process take at most MAX_QUANTA scheduler quanta
   // before a different process is scheduled
-  if (quanta < MAX_QUANTA)
+  if (quanta > MAX_QUANTA)
     newproc->schdldat.pass = pmin->schdldat.pass - (MAX_QUANTA * newproc->schdldat.stride);
 }
 
