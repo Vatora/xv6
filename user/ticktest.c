@@ -12,12 +12,14 @@ print_help(int invalid_args)
 {
   if (invalid_args)
     printf(1, "Invalid arguments\n");
+  else
+    printf(1, "ticktest: Test the scheduler by comparing the time allocation for processes with different numbers of tickets\n");
 
   printf(1, "\n");
-  printf(1, "Arguments:\n");
+  printf(1, "Usage:\n");
   printf(1, "-h  Print this help message\n");
-  printf(1, "-c  Number of children to run\n");
-  printf(1, "-t  Amount of time to wait for children to accumulate CPU time (units: 0.01s)\n");
+  printf(1, "-p  Number of processes to run\n");
+  printf(1, "-t  Amount of time to wait for processes to accumulate CPU time (units: 0.01s)\n");
 
   exit();
 }
@@ -41,8 +43,8 @@ main(int argc, char** argv)
        print_help(0);
       }
 
-      // Children
-      if (strcmp(argv[i], "-c") == 0) {
+      // Process count
+      if (strcmp(argv[i], "-p") == 0) {
         if (i == (argc-1)) {
           print_help(1);
         }
