@@ -15,11 +15,10 @@ print_help(int invalid_args)
   else
     printf(1, "ticktest: Test the scheduler by comparing the time allocation for processes with different numbers of tickets\n");
 
-  printf(1, "\n");
   printf(1, "Usage:\n");
   printf(1, "-h  Print this help message\n");
   printf(1, "-p  Number of processes to run\n");
-  printf(1, "-t  Amount of time to wait for processes to accumulate CPU time (units: 0.01s)\n");
+  printf(1, "-t  Amount of time to wait for processes to accumulate CPU time\n");
 
   exit();
 }
