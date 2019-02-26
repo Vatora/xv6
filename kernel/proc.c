@@ -28,15 +28,15 @@ static void set_min_pass(struct proc* newproc);
 void
 getpstats1(struct pstat* stats)
 {
-	for (int i = 0; i < NPROC; ++i) {
-		stats->inuse[i]     = ptable.proc[i].state != UNUSED;
-		stats->pid[i]       = ptable.proc[i].pid;
-		stats->tickets[i]   = ptable.proc[i].schdldat.tickets;
-		stats->stride[i]    = ptable.proc[i].schdldat.stride;
-		stats->pass[i]      = ptable.proc[i].schdldat.pass;
-		stats->scheduled[i] = ptable.proc[i].schdldat.schdlnum;
-		stats->ticks[i]     = ptable.proc[i].schdldat.schdlnum * 10; //Assuming 10ms quantum w/ no early interrupt
-	}
+  for (int i = 0; i < NPROC; ++i) {
+    stats->inuse[i]     = ptable.proc[i].state != UNUSED;
+    stats->pid[i]       = ptable.proc[i].pid;
+    stats->tickets[i]   = ptable.proc[i].schdldat.tickets;
+    stats->stride[i]    = ptable.proc[i].schdldat.stride;
+    stats->pass[i]      = ptable.proc[i].schdldat.pass;
+    stats->scheduled[i] = ptable.proc[i].schdldat.schdlnum;
+    stats->ticks[i]     = ptable.proc[i].schdldat.schdlnum * 10; //Assuming 10ms quantum w/ no early interrupt
+  }
 }
 
 void
