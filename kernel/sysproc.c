@@ -19,13 +19,13 @@ sys_clone(void)
   void *arg;
   void *stack;
 
-  if (argptr(0, &fcn, sizeof(fcn)) < 0) {
+  if (argptr(0, (void *)&fcn, sizeof(fcn)) < 0) {
     return -1;
   }
-  if (argptr(1, &arg, sizeof(arg)) < 0) {
+  if (argptr(1, (void *)&arg, sizeof(arg)) < 0) {
     return -1;
   }
-  if (argptr(2, &stack, sizeof(stack)) < 0) {
+  if (argptr(2, (void *)&stack, sizeof(stack)) < 0) {
     return -1;
   }
 
@@ -34,7 +34,11 @@ sys_clone(void)
 
 int
 sys_join(void){
-  return -1;
+  void **stack;
+  if (argptr(0, (void *)&stack, sizeof(stack)) < 0) {
+    return -1;
+  }
+  return join(stack);
 }
 
 int
