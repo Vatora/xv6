@@ -165,6 +165,12 @@ clone(void(*fcn)(void*), void *arg, void *stack)
    return 0;
 }
 
+int
+join(void **stack)
+{
+  return 0;
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.

@@ -33,6 +33,11 @@ sys_clone(void)
 }
 
 int
+sys_join(void){
+  return -1;
+}
+
+int
 sys_exit(void)
 {
   exit();
