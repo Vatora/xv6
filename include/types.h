@@ -12,7 +12,7 @@ typedef uint pde_t;
 #endif
 
 typedef struct _lock_t {
-	int locked;
+  uint locked;
 } lock_t;
 
 #endif //_TYPES_H_
