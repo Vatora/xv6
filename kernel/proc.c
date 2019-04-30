@@ -189,7 +189,7 @@ clone(void(*fcn)(void*), void *arg, void *stack)
 
   // Initial stack contents (as seen in exec.c)
   ustack[0] = 0xffffffff;  // fake return PC
-  ustack[1] = arg;
+  ustack[1] = (uint)arg;
 
   // Setup stack.
   sp = (uint)stack + PGSIZE; //stack is one page
