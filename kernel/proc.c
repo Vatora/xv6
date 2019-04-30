@@ -198,6 +198,7 @@ clone(void(*fcn)(void*), void *arg, void *stack)
     return -1;
   }
   np->tf->esp = sp;
+  np->stack = stack;
 
   // Set the thread's instruction pointer
   np->tf->eip = (uint)fcn;
@@ -228,7 +229,7 @@ join(void **stack)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 
       // Find a thread spawned by this process
-      if(p->parent != proc || p->pgdir != proc->pgdir || !p->thread)
+      if(p->parent != proc || p->pgdir != proc->pgdir)
         continue;
         
       havekids = 1;
@@ -243,6 +244,7 @@ join(void **stack)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+        *stack = p->stack; //set the stack address
         release(&ptable.lock);
         return pid;
       }

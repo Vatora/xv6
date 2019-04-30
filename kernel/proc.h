@@ -64,10 +64,10 @@ struct proc {
   uint sz;                     // Size of process memory (bytes)
   pde_t* pgdir;                // Page table
   char *kstack;                // Bottom of kernel stack for this process
+  void *stack;                 // Bottom of process stack
   enum procstate state;        // Process state
   volatile int pid;            // Process ID
   struct proc *parent;         // Parent process
-  int thread;                  // If non-zero, process is a thread
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
   void *chan;                  // If non-zero, sleeping on chan
