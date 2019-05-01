@@ -219,7 +219,7 @@ clone(void(*fcn)(void*), void *arg, void *stack)
     if(proc->ofile[i])
       np->ofile[i] = filedup(proc->ofile[i]);
   np->cwd = idup(proc->cwd);
- 
+
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
@@ -304,7 +304,10 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == proc){
-      p->parent = initproc;
+      if(p->pgdir == proc->pgdir) // The exiting process is a thread
+        p->parent = 0;
+      else
+        p->parent = initproc;
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
