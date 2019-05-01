@@ -8,10 +8,14 @@
 int
 thread_create(void(*start_routine)(void*), void* arg)
 {
-   void *stack = malloc(PGSIZE*2);
-   if (stack == NULL)
-	return -1;
+  void *stack = malloc(PGSIZE*2);
+  if (stack == NULL)
+    return -1;
 
+  // Page align the stack
+  if ((uint)stack % PGSIZE != 0)
+    stack = (void *)((uint)stack + (PGSIZE - ((uint)stack % PGSIZE)));
+    
   return clone(start_routine, arg, stack);
 }
 
