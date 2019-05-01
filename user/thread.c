@@ -8,7 +8,10 @@
 int
 thread_create(void(*start_routine)(void*), void* arg)
 {
-  void *const stack = malloc(PGSIZE);
+   void *stack = malloc(PGSIZE*2);
+   if (stack == NULL)
+	return -1;
+
   return clone(start_routine, arg, stack);
 }
 

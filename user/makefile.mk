@@ -31,7 +31,8 @@ USER_PROGS := \
 	T_size \
 	T_stack \
 	T_thread \
-	T_thread2
+	T_thread2 \
+	threadtest
 
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 

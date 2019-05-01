@@ -93,6 +93,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  p->stack = 0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -249,13 +250,13 @@ join(void **stack)
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
         p->state = UNUSED;
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
         *stack = p->stack; //set the stack address
+        p->stack = 0;
         release(&ptable.lock);
         return pid;
       }
@@ -328,8 +329,11 @@ wait(void)
     // Scan through table looking for zombie children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
+      if (p->parent != proc)
         continue;
+      if (p->pgdir == proc->pgdir)
+        continue;
+
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
