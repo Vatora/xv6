@@ -71,6 +71,21 @@ found:
   return p;
 }
 
+void
+deallocproc(struct proc *p)
+{
+  kfree(p->kstack);
+  p->stack = 0;
+  p->kstack = 0;
+  if (p->pgdir != p->parent->pgdir) //if not a thread
+    freevm(p->pgdir);
+  p->state = UNUSED;
+  p->pid = 0;
+  p->parent = 0;
+  p->name[0] = 0;
+  p->killed = 0;
+}
+
 // Set up first user process.
 void
 userinit(void)
@@ -248,15 +263,8 @@ join(void **stack)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        p->state = UNUSED;
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
         *stack = p->stack; //set the stack address
-        p->stack = 0;
+        deallocproc(p);
         release(&ptable.lock);
         return pid;
       }
@@ -304,8 +312,8 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == proc){
-      if(p->pgdir == proc->pgdir) // The exiting process is a thread
-        p->parent = 0;
+      if (p->pgdir == proc->pgdir)
+        deallocproc(p);
       else
         p->parent = initproc;
       if(p->state == ZOMBIE)
@@ -341,14 +349,7 @@ wait(void)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->state = UNUSED;
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
+        deallocproc(p);
         release(&ptable.lock);
         return pid;
       }
