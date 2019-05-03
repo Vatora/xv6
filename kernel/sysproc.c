@@ -20,10 +20,13 @@ sys_clone(void)
   void *arg;
   void *stack;
 
+  // argptr verifies that the pointer lies within process's
+  // address space. This should be the case for fcn and stack,
+  // but not necessarily for arg (ex. nullptr).
   if (argptr(0, (void *)&fcn, sizeof(fcn)) < 0) {
     return -1;
   }
-  if (argptr(1, (void *)&arg, sizeof(arg)) < 0) {
+  if (argint(1, (int *)&arg) < 0) {
     return -1;
   }
   if (argptr(2, (void *)&stack, sizeof(stack)) < 0) {
