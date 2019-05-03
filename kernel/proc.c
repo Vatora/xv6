@@ -250,6 +250,7 @@ fork(void)
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
 
+  // Insert the process into the queue
   acquire(&ptable.lock);
   proc_queue_insert(&ptable.pqueue, np);
   release(&ptable.lock);
@@ -282,6 +283,11 @@ clone(void(*fcn)(void*), void *arg, void *stack)
   np->parent = proc;
   *np->tf = *proc->tf;
 
+  // Copy the scheduling data from the parent
+  np->schdldat.tickets = proc->schdldat.tickets;
+  np->schdldat.stride = proc->schdldat.stride;
+  np->schdldat.pass = proc->schdldat.pass;
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -309,6 +315,12 @@ clone(void(*fcn)(void*), void *arg, void *stack)
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+
+  // Insert the process into the queue
+  acquire(&ptable.lock);
+  proc_queue_insert(&ptable.pqueue, np);
+  release(&ptable.lock);
+
   return pid;
 }
 
