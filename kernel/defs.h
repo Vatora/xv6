@@ -96,10 +96,12 @@ int             piperead(struct pipe*, char*, int);
 int             pipewrite(struct pipe*, char*, int);
 
 // proc.c
+int             clone(void(*fcn)(void*), void *arg, void *stack);
 struct proc*    copyproc(struct proc*);
 void            exit(void);
 int             fork(void);
 int             growproc(int);
+int             join(void **stack);
 int             kill(int);
 void            pinit(void);
 void            procdump(void);

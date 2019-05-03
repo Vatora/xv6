@@ -129,6 +129,21 @@ found:
   return p;
 }
 
+void
+deallocproc(struct proc *p)
+{
+  kfree(p->kstack);
+  p->stack = 0;
+  p->kstack = 0;
+  if (p->pgdir != p->parent->pgdir) //if not a thread
+    freevm(p->pgdir);
+  p->state = UNUSED;
+  p->pid = 0;
+  p->parent = 0;
+  p->name[0] = 0;
+  p->killed = 0;
+}
+
 // Set up first user process.
 void
 userinit(void)
@@ -151,6 +166,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE * 2;
   p->tf->eip = PGSIZE;  // beginning of initcode.S
+  p->stack = 0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -167,6 +183,7 @@ int
 growproc(int n)
 {
   uint sz;
+  struct proc *p;
   
   sz = proc->sz;
   if(n > 0){
@@ -177,6 +194,16 @@ growproc(int n)
       return -1;
   }
   proc->sz = sz;
+
+  // Update the sizes of child threads.
+  acquire(&ptable.lock);
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; ++p) {
+	  if (p->parent == proc && p->pgdir == proc->pgdir) {
+		  p->sz = sz;
+	  }
+  }
+  release(&ptable.lock);
+
   switchuvm(proc);
   return 0;
 }
@@ -230,6 +257,101 @@ fork(void)
   return pid;
 }
 
+int
+clone(void(*fcn)(void*), void *arg, void *stack)
+{
+  int i, pid;
+  uint sp;
+  uint ustack[2];
+  struct proc *np;
+
+  // Validate page size and alignment.
+  if ((proc->sz - (uint)stack) < PGSIZE ||
+      (uint)stack % PGSIZE != 0) {
+    return -1;
+  }
+
+  // Allocate a new process
+  if ((np = allocproc()) == 0) {
+    return -1;
+  }
+
+  // Copy process state from p.
+  np->pgdir = proc->pgdir;
+  np->sz = proc->sz;
+  np->parent = proc;
+  *np->tf = *proc->tf;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  // Initial stack contents (as seen in exec.c)
+  ustack[0] = 0xffffffff;  // fake return PC
+  ustack[1] = (uint)arg;
+
+  // Setup stack.
+  sp = (uint)stack + PGSIZE; //stack is one page
+  sp -= sizeof(ustack);
+  if (copyout(np->pgdir, sp, ustack, sizeof(ustack)) < 0) {
+    return -1;
+  }
+  np->tf->esp = sp;
+  np->stack = stack;
+
+  // Set the thread's instruction pointer
+  np->tf->eip = (uint)fcn;
+
+  for(i = 0; i < NOFILE; i++)
+    if(proc->ofile[i])
+      np->ofile[i] = filedup(proc->ofile[i]);
+  np->cwd = idup(proc->cwd);
+
+  pid = np->pid;
+  np->state = RUNNABLE;
+  safestrcpy(np->name, proc->name, sizeof(proc->name));
+  return pid;
+}
+
+// Wait for threads spawned by proc to finish execution.
+// Very similar to wait().
+int
+join(void **stack)
+{
+  struct proc *p;
+  int havekids, pid;
+
+  acquire(&ptable.lock);
+  for(;;){
+    // Scan through table looking for zombie children.
+    havekids = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+
+      // Find a thread spawned by this process
+      if(p->parent != proc || p->pgdir != proc->pgdir)
+        continue;
+        
+      havekids = 1;
+      if(p->state == ZOMBIE){
+        // Found one.
+        pid = p->pid;
+        *stack = p->stack; //set the stack address
+        deallocproc(p);
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || proc->killed){
+      release(&ptable.lock);
+      return -1;
+    }
+
+    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+    sleep(proc, &ptable.lock);  //DOC: wait-sleep
+  }
+}
+
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
@@ -261,7 +383,10 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == proc){
-      p->parent = initproc;
+      if (p->pgdir == proc->pgdir)
+        deallocproc(p);
+      else
+        p->parent = initproc;
       if(p->state == ZOMBIE)
         wakeup1(initproc);
     }
@@ -286,20 +411,16 @@ wait(void)
     // Scan through table looking for zombie children.
     havekids = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->parent != proc)
+      if (p->parent != proc)
         continue;
+      if (p->pgdir == proc->pgdir)
+        continue;
+
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->state = UNUSED;
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
+        deallocproc(p);
         release(&ptable.lock);
         return pid;
       }

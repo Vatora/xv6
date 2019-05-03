@@ -14,6 +14,35 @@ sys_fork(void)
 }
 
 int
+sys_clone(void)
+{
+  void(*fcn)(void*);
+  void *arg;
+  void *stack;
+
+  if (argptr(0, (void *)&fcn, sizeof(fcn)) < 0) {
+    return -1;
+  }
+  if (argptr(1, (void *)&arg, sizeof(arg)) < 0) {
+    return -1;
+  }
+  if (argptr(2, (void *)&stack, sizeof(stack)) < 0) {
+    return -1;
+  }
+
+  return clone(fcn, arg, stack);
+}
+
+int
+sys_join(void){
+  void **stack;
+  if (argptr(0, (void *)&stack, sizeof(stack)) < 0) {
+    return -1;
+  }
+  return join(stack);
+}
+
+int
 sys_exit(void)
 {
   exit();

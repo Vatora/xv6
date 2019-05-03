@@ -26,5 +26,6 @@
 #define SYS_setticket 22
 #define SYS_getticket 23
 #define SYS_getpinfo  24
-
+#define SYS_clone     25
+#define SYS_join      26
 #endif // _SYSCALL_H_

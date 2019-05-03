@@ -29,6 +29,8 @@ int uptime(void);
 int setticket(int);
 int getticket(void);
 int getpinfo(struct pstat*);
+int clone(void(*)(void*), void*, void*);
+int join(void**);
 
 // user library functions (ulib.c)
 int stat(char*, struct stat*);
@@ -43,6 +45,13 @@ void* memset(void*, int, uint);
 void* malloc(uint);
 void free(void*);
 int atoi(const char*);
+
+// thread functions (thread.c)
+int thread_create(void(*start_routine)(void*), void* arg);
+int thread_join(void);
+void lock_init(lock_t*);
+void lock_acquire(lock_t*);
+void lock_release(lock_t*);
 
 #endif // _USER_H_
 

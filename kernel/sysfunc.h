@@ -26,5 +26,6 @@ int sys_uptime(void);
 int sys_setticket(void);
 int sys_getticket(void);
 int sys_getpinfo(void);
-
+int sys_clone(void);
+int sys_join(void);
 #endif // _SYSFUNC_H_
