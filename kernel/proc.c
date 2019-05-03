@@ -5,10 +5,15 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
+#include "proc_queue.h"
+
+#define MAX_QUANTA 10
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  proc_queue pqueue;
 } ptable;
 
 static struct proc *initproc;
@@ -18,11 +23,58 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+static void set_min_pass(struct proc* newproc);
+
+void
+getpstats1(struct pstat* stats)
+{
+  for (int i = 0; i < NPROC; ++i) {
+    stats->inuse[i]     = ptable.proc[i].state != UNUSED;
+    stats->pid[i]       = ptable.proc[i].pid;
+    stats->tickets[i]   = ptable.proc[i].schdldat.tickets;
+    stats->stride[i]    = ptable.proc[i].schdldat.stride;
+    stats->pass[i]      = ptable.proc[i].schdldat.pass;
+    stats->scheduled[i] = ptable.proc[i].schdldat.schdlnum;
+    stats->ticks[i]     = ptable.proc[i].schdldat.schdlnum * 10; //Assuming 10ms quantum w/ no early interrupt
+  }
+}
+
+void
+getpstats(struct pstat* stats)
+{
+  if (holding(&ptable.lock)) {
+    getpstats1(stats);
+  }
+  else {
+    acquire(&ptable.lock);
+    getpstats1(stats);
+    release(&ptable.lock);
+  }
+}
+
+// Assumes ptable.lock has already been acquired
+static void
+set_min_pass(struct proc* newproc)
+{
+  struct proc* pmin = proc_queue_peek_min(&ptable.pqueue);
+  if (!newproc || !pmin)
+    return;
+
+  // Number of scheduler quanta for which the new process will occupy the CPU
+  const int pass_delta = pmin->schdldat.pass - newproc->schdldat.pass;
+  const int quanta     = pass_delta / newproc->schdldat.stride;
+
+  // Make the process take at most MAX_QUANTA scheduler quanta
+  // before a different process is scheduled
+  if (quanta > MAX_QUANTA)
+    newproc->schdldat.pass = pmin->schdldat.pass - (MAX_QUANTA * newproc->schdldat.stride);
+}
 
 void
 pinit(void)
 {
   initlock(&ptable.lock, "ptable");
+  proc_queue_init(&ptable.pqueue);
 }
 
 // Look in the process table for an UNUSED proc.
@@ -43,6 +95,12 @@ allocproc(void)
   return 0;
 
 found:
+  // Initialize the sheduling data
+  p->schdldat.tickets = DEFAULT_TICKETS;
+  p->schdldat.stride = STRIDE_DIV / DEFAULT_TICKETS;
+  p->schdldat.pass = 0;
+  p->schdldat.schdlnum = 0;
+
   p->state = EMBRYO;
   p->pid = nextpid++;
   release(&ptable.lock);
@@ -98,6 +156,8 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  proc_queue_insert(&ptable.pqueue, p);
+
   release(&ptable.lock);
 }
 
@@ -145,6 +205,12 @@ fork(void)
   np->parent = proc;
   *np->tf = *proc->tf;
 
+  // Copy the scheduling data from the parent
+  np->schdldat.tickets = proc->schdldat.tickets;
+  np->schdldat.stride = proc->schdldat.stride;
+  np->schdldat.pass = proc->schdldat.pass;
+
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -156,6 +222,11 @@ fork(void)
   pid = np->pid;
   np->state = RUNNABLE;
   safestrcpy(np->name, proc->name, sizeof(proc->name));
+
+  acquire(&ptable.lock);
+  proc_queue_insert(&ptable.pqueue, np);
+  release(&ptable.lock);
+
   return pid;
 }
 
@@ -261,15 +332,14 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
+    // Run the process with the minimum pass value
+    p = proc_queue_pop_min(&ptable.pqueue);
+
+    if (p && p->state == RUNNABLE) {
+      p->schdldat.pass += p->schdldat.stride;
+      p->schdldat.schdlnum++;
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -280,6 +350,10 @@ scheduler(void)
       // It should have changed its p->state before coming back.
       proc = 0;
     }
+    else if (p) {
+        cprintf("non-runnable process in queue: %s (0x%p) (state: %d)\n", p->name, p, p->state);
+    }
+    
     release(&ptable.lock);
 
   }
@@ -311,6 +385,7 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   proc->state = RUNNABLE;
+  proc_queue_insert(&ptable.pqueue, proc);
   sched();
   release(&ptable.lock);
 }
@@ -371,8 +446,11 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan) {
       p->state = RUNNABLE;
+      set_min_pass(p);
+      proc_queue_insert(&ptable.pqueue, p);
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -397,8 +475,10 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
+      if(p->state == SLEEPING) {
         p->state = RUNNABLE;
+        proc_queue_insert(&ptable.pqueue, p);
+      }
       release(&ptable.lock);
       return 0;
     }

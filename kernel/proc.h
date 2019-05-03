@@ -10,6 +10,9 @@
 #define SEG_TSS   6  // this process's task state
 #define NSEGS     7
 
+#define STRIDE_DIV (1 << 12)
+#define DEFAULT_TICKETS 10
+
 // Per-CPU state
 struct cpu {
   uchar id;                    // Local APIC ID; index into cpus[] below
@@ -59,6 +62,14 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+// Scheduling data
+struct scheduling {
+  int tickets;   // Number of tickets the process has
+  int stride;    // Process stride (calculated using tickets)
+  int pass;      // Current pass value of the process
+  int schdlnum;  // Number of times the process has been scheduled
+};
+
 // Per-process state
 struct proc {
   uint sz;                     // Size of process memory (bytes)
@@ -66,6 +77,7 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   volatile int pid;            // Process ID
+  struct scheduling schdldat;  // Scheduling data
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
