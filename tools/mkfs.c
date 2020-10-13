@@ -217,7 +217,8 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  mkfs(995, 200, 1024);
+  //mkfs(995, 200, 1024);
+  mkfs(1994, 400, 2048);
 
   root_dir = opendir(argv[2]);
 
