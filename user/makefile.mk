@@ -14,6 +14,7 @@ USER_PROGS := \
 	pinfo\
 	rm\
 	sh\
+	smallfile\
 	stressfs\
 	tester\
 	ticket\

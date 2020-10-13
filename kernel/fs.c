@@ -408,11 +408,21 @@ readi(struct inode *ip, char *dst, uint off, uint n)
   if(off + n > ip->size)
     n = ip->size - off;
 
-  for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE));
-    m = min(n - tot, BSIZE - off%BSIZE);
-    memmove(dst, bp->data + off%BSIZE, m);
-    brelse(bp);
+  if (ip->type == T_SMALLFILE){
+    memmove(dst, ip->addrs + off, n);
+  }
+  else{
+    for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
+      uint sector_number = bmap(ip, off/BSIZE);
+      if(sector_number == 0){
+        n = tot;
+        break;
+      }
+      bp = bread(ip->dev, sector_number);
+      m = min(n - tot, BSIZE - off%BSIZE);
+      memmove(dst, bp->data + off%BSIZE, m);
+      brelse(bp);
+    }
   }
   return n;
 }
@@ -432,15 +442,30 @@ writei(struct inode *ip, char *src, uint off, uint n)
 
   if(off > ip->size || off + n < off)
     return -1;
-  if(off + n > MAXFILE*BSIZE)
-    n = MAXFILE*BSIZE - off;
 
-  for(tot=0; tot<n; tot+=m, off+=m, src+=m){
-    bp = bread(ip->dev, bmap(ip, off/BSIZE));
-    m = min(n - tot, BSIZE - off%BSIZE);
-    memmove(bp->data + off%BSIZE, src, m);
-    bwrite(bp);
-    brelse(bp);
+  if(ip->type == T_SMALLFILE){
+    if(off + n > sizeof(ip->addrs))
+      n = sizeof(ip->addrs) - off;
+
+    memmove(ip->addrs + off, src, n);
+    off += n;
+  }
+  else{
+    if(off + n > MAXFILE*BSIZE)
+      n = MAXFILE*BSIZE - off;
+
+    for(tot=0; tot<n; tot+=m, off+=m, src+=m){
+      uint sector_number = bmap(ip, off/BSIZE);
+      if(sector_number == 0){
+        n = tot;
+        break;
+      }
+      bp = bread(ip->dev, sector_number);
+      m = min(n - tot, BSIZE - off%BSIZE);
+      memmove(bp->data + off%BSIZE, src, m);
+      bwrite(bp);
+      brelse(bp);
+    }
   }
 
   if(n > 0 && off > ip->size){
