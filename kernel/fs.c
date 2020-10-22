@@ -409,7 +409,7 @@ readi(struct inode *ip, char *dst, uint off, uint n)
     n = ip->size - off;
 
   if (ip->type == T_SMALLFILE){
-    memmove(dst, ip->addrs + off, n);
+    memmove(dst, ((void*)ip->addrs) + off, n);
   }
   else{
     for(tot=0; tot<n; tot+=m, off+=m, dst+=m){
@@ -447,7 +447,8 @@ writei(struct inode *ip, char *src, uint off, uint n)
     if(off + n > sizeof(ip->addrs))
       n = sizeof(ip->addrs) - off;
 
-    memmove(ip->addrs + off, src, n);
+    //cast to char first to ensure proper pointer arithmetic
+    memmove(((char*)ip->addrs) + off, src, n);
     off += n;
   }
   else{
